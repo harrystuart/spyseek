@@ -1,0 +1,41 @@
+<!doctype html>
+<html>
+  <head>
+    <title>Spyfall</title>
+  </head>
+  <body>
+    <h1>Spyfall</h1>
+
+    <input id="name" placeholder="Username" />
+    <input id="email" placeholder="Email" />
+
+    <button id="create-room">Create room</button>
+
+    <input id="room-code" placeholder="Room code" />
+    <button id="join-room">Join room</button>
+
+    <button id="start-game">Start game</button>
+    <button id="leave-room">Leave room</button>
+
+    <p id="status"></p>
+
+    <h2>Your role</h2>
+    <p id="role"></p>
+
+    <h2>Turn</h2>
+    <p id="turn"></p>
+
+    <h2>Players</h2>
+    <ul id="players"></ul>
+
+    <h2>Q&A</h2>
+    <ul id="messages"></ul>
+
+    <select id="answerer"></select>
+    <input id="chat-message" placeholder="Message" />
+    <button id="send-chat-message">Send</button>
+
+    <script src="/socket.io/socket.io.js"></script>
+    <script src="/app.js"></script>
+  </body>
+</html>
