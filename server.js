@@ -7,7 +7,7 @@ const app = express();
 const server = http.createServer(app);
 const io = new Server(server);
 
-const MIN_PLAYERS = 1;
+const MIN_PLAYERS = 3;
 const MAX_PLAYERS = 4;
 const MAX_CHAT_MESSAGE_LENGTH = 500;
 const ROUND_SECONDS = 30;
