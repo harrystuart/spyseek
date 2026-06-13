@@ -1574,7 +1574,7 @@ function resolveSpyGuess(room, guessedLocation) {
     recipientName: null,
     text: guessedCorrectly
       ? `${spy.name} guessed ${guessedLocation}. The spy was correct. Spy wins.`
-      : `${spy.name} guessed ${guessedLocation}. The spy was wrong. Players win.`,
+      : `${spy.name} guessed ${guessedLocation}. The spy was wrong. Agents win.`,
     sentAt: new Date().toISOString()
   });
 
@@ -1645,7 +1645,7 @@ function resolveConviction(room, accusation) {
     senderName: "System",
     recipientName: null,
     text: accusedWasSpy
-      ? `${accused.name} was the spy. Players win.`
+      ? `${accused.name} was the spy. Agents win.`
       : `${accused.name} was not the spy. The spy was ${spy.name}. Spy wins.`,
     sentAt: new Date().toISOString()
   });
