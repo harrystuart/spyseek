@@ -11,10 +11,11 @@ const server = http.createServer(app);
 const io = new Server(server);
 
 const MIN_PLAYERS = 3;
-const MAX_PLAYERS = 4;
+const MAX_PLAYERS = 8;
 const MAX_CHAT_MESSAGE_LENGTH = 500;
 const ROUND_SECONDS = 720;
 const BELIEF_VALUES = ["-", "N", "+"];
+const SPY_BELIEF_LOCATION_OPTION_COUNT = 6;
 
 const rooms = new Map();
 
@@ -758,6 +759,7 @@ io.on("connection", socket => {
         questionerId,
         answererId,
         voterIds: room.players.map(player => player.id),
+        spyLocationOptions: chooseSpyBeliefLocationOptions(),
         updates: [],
         startedAt: new Date().toISOString()
       };
@@ -1324,8 +1326,14 @@ function validateBeliefUpdateForPlayer(
       return { error: "Spy cannot submit player belief updates" };
     }
 
-    if (cleanSuspectedLocations.length === 0) {
-      return { error: "Spy must submit suspected locations or none" };
+    const allowedLocations = beliefUpdate.spyLocationOptions || [];
+
+    const invalidSpyLocation = cleanSuspectedLocations.find(location => {
+      return !allowedLocations.includes(location);
+    });
+
+    if (invalidSpyLocation) {
+      return { error: "Spy can only submit one of the shown locations" };
     }
 
     return {
@@ -1766,6 +1774,7 @@ function publicRoom(room) {
       beliefUpdate = {
         questionerName: questioner.name,
         answererName: answerer.name,
+        spyLocationOptions: room.game.beliefUpdate.spyLocationOptions || [],
         submittedCount: room.game.beliefUpdate.updates.length,
         totalCount: room.game.beliefUpdate.voterIds.length
       };
@@ -1937,6 +1946,12 @@ function saveRoom(room, reason) {
   console.log(`Saved room ${room.id} to /rooms/${filename}`);
 
   return `/rooms/${filename}`;
+}
+
+function chooseSpyBeliefLocationOptions() {
+  return [...LOCATIONS]
+    .sort(() => Math.random() - 0.5)
+    .slice(0, SPY_BELIEF_LOCATION_OPTION_COUNT);
 }
 
 const PORT = process.env.PORT || 3000;

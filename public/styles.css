@@ -597,12 +597,6 @@ select:disabled {
   text-align: left;
 }
 
-.prompt-title {
-  margin: 0 0 8px;
-  font-size: 1rem;
-  letter-spacing: -0.02em;
-}
-
 .prompt-body {
   margin: 0 0 14px;
   color: var(--prompt-text);
@@ -624,6 +618,56 @@ select:disabled {
   display: grid;
   gap: 7px;
   font-weight: 750;
+}
+
+.belief-options {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 8px;
+}
+
+.belief-radio {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  min-height: 42px;
+  padding: 8px 10px;
+  border: 1px solid rgba(251, 191, 36, 0.55);
+  border-radius: 10px;
+  background: rgba(255, 255, 255, 0.58);
+  font-weight: 750;
+  cursor: pointer;
+  text-align: center;
+}
+
+.belief-radio input {
+  width: auto;
+  height: auto;
+}
+
+.spy-belief-location-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 8px;
+}
+
+.spy-belief-location-option {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-height: 42px;
+  padding: 8px 10px;
+  border: 1px solid rgba(251, 191, 36, 0.55);
+  border-radius: 10px;
+  background: rgba(255, 255, 255, 0.58);
+  font-weight: 750;
+  cursor: pointer;
+}
+
+.spy-belief-location-option input {
+  width: auto;
+  height: auto;
 }
 
 .location-checks {

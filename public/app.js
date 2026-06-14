@@ -205,37 +205,6 @@ messagesList.addEventListener("click", event => {
   }
 });
 
-messagesList.addEventListener("change", event => {
-  const checkbox = event.target.closest("input[data-belief-location]");
-
-  if (!checkbox) {
-    return;
-  }
-
-  const prompt = checkbox.closest(".temporary-message");
-
-  if (!prompt) {
-    return;
-  }
-
-  const checkboxes = Array.from(prompt.querySelectorAll("input[data-belief-location]"));
-  const noneCheckbox = checkboxes.find(input => input.value === "none");
-
-  if (checkbox.value === "none" && checkbox.checked) {
-    for (const input of checkboxes) {
-      if (input !== checkbox) {
-        input.checked = false;
-      }
-    }
-
-    return;
-  }
-
-  if (checkbox.value !== "none" && checkbox.checked && noneCheckbox) {
-    noneCheckbox.checked = false;
-  }
-});
-
 roomCodeInput.addEventListener("input", () => {
   roomCodeInput.value = roomCodeInput.value.toUpperCase();
 });
@@ -419,15 +388,15 @@ function submitBeliefUpdate(button) {
     suspectedLocations = Array.from(prompt.querySelectorAll("input[data-belief-location]:checked"))
       .map(input => input.value);
   } else {
-    const questionerSelect = prompt.querySelector("select[data-belief-target='questioner']");
-    const answererSelect = prompt.querySelector("select[data-belief-target='answerer']");
+    const questionerRadio = prompt.querySelector("input[data-belief-target='questioner']:checked");
+    const answererRadio = prompt.querySelector("input[data-belief-target='answerer']:checked");
 
-    if (questionerSelect) {
-      questionerBelief = questionerSelect.value;
+    if (questionerRadio) {
+      questionerBelief = questionerRadio.value;
     }
 
-    if (answererSelect) {
-      answererBelief = answererSelect.value;
+    if (answererRadio) {
+      answererBelief = answererRadio.value;
     }
   }
 
@@ -953,7 +922,7 @@ function renderLocations(room) {
 
     const icon = document.createElement("span");
     icon.className = "material-symbols-rounded";
-    icon.textContent = "point_scan";
+    icon.textContent = "add_location_alt";
 
     guessButton.appendChild(icon);
     tooltip.appendChild(guessButton);
@@ -1027,11 +996,6 @@ function createBeliefPrompt(room) {
   const prompt = document.createElement("li");
   prompt.className = "temporary-message belief-prompt";
 
-  const title = document.createElement("h3");
-  title.className = "prompt-title";
-  title.textContent = "Private belief update";
-  prompt.appendChild(title);
-
   const intro = document.createElement("p");
   intro.className = "prompt-body";
   intro.textContent = "This is private. It will not appear in the chat log.";
@@ -1050,7 +1014,7 @@ function createBeliefPrompt(room) {
   button.type = "button";
   button.className = "button button-primary submit-belief-button";
   button.dataset.beliefKey = beliefKey;
-  button.textContent = "Submit update";
+  button.textContent = "Submit";
 
   actions.appendChild(button);
   prompt.appendChild(actions);
@@ -1091,35 +1055,28 @@ function createSpyBeliefForm(room) {
 
   const question = document.createElement("p");
   question.className = "belief-question";
-  question.textContent = "Which locations do you suspect?";
+  question.textContent = "Which of these locations became more likely?";
   form.appendChild(question);
 
   const options = document.createElement("div");
-  options.className = "location-checks";
+  options.className = "spy-belief-location-grid";
 
-  const noneLabel = document.createElement("label");
-  noneLabel.className = "check-row";
+  const locations = room.beliefUpdate.spyLocationOptions || [];
 
-  const noneCheckbox = document.createElement("input");
-  noneCheckbox.type = "checkbox";
-  noneCheckbox.value = "none";
-  noneCheckbox.dataset.beliefLocation = "true";
-
-  noneLabel.appendChild(noneCheckbox);
-  noneLabel.append("None");
-  options.appendChild(noneLabel);
-
-  for (const location of room.locations) {
+  for (const location of locations) {
     const label = document.createElement("label");
-    label.className = "check-row";
+    label.className = "spy-belief-location-option";
 
     const checkbox = document.createElement("input");
     checkbox.type = "checkbox";
     checkbox.value = location;
     checkbox.dataset.beliefLocation = "true";
 
+    const text = document.createElement("span");
+    text.textContent = location;
+
     label.appendChild(checkbox);
-    label.append(location);
+    label.appendChild(text);
     options.appendChild(label);
   }
 
@@ -1129,37 +1086,42 @@ function createSpyBeliefForm(room) {
 }
 
 function createBeliefScaleQuestion(target, labelText) {
-  const wrapper = document.createElement("label");
+  const wrapper = document.createElement("div");
   wrapper.className = "belief-scale";
 
-  const text = document.createElement("span");
+  const text = document.createElement("p");
+  text.className = "belief-question";
   text.textContent = labelText;
   wrapper.appendChild(text);
 
-  const select = document.createElement("select");
-  select.dataset.beliefTarget = target;
+  const options = document.createElement("div");
+  options.className = "belief-options";
 
-  const blankOption = document.createElement("option");
-  blankOption.value = "";
-  blankOption.textContent = "Choose";
-  select.appendChild(blankOption);
+  const choices = [
+    { value: "-", label: "Less spy-like" },
+    { value: "N", label: "No difference" },
+    { value: "+", label: "More spy-like" }
+  ];
 
-  const lessOption = document.createElement("option");
-  lessOption.value = "-";
-  lessOption.textContent = "- less spy-like";
-  select.appendChild(lessOption);
+  for (const choice of choices) {
+    const label = document.createElement("label");
+    label.className = "belief-radio";
 
-  const neutralOption = document.createElement("option");
-  neutralOption.value = "N";
-  neutralOption.textContent = "N neutral";
-  select.appendChild(neutralOption);
+    const input = document.createElement("input");
+    input.type = "radio";
+    input.name = `belief-${target}`;
+    input.value = choice.value;
+    input.dataset.beliefTarget = target;
 
-  const moreOption = document.createElement("option");
-  moreOption.value = "+";
-  moreOption.textContent = "+ more spy-like";
-  select.appendChild(moreOption);
+    const span = document.createElement("span");
+    span.textContent = choice.label;
 
-  wrapper.appendChild(select);
+    label.appendChild(input);
+    label.appendChild(span);
+    options.appendChild(label);
+  }
+
+  wrapper.appendChild(options);
 
   return wrapper;
 }
