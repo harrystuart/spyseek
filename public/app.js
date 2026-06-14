@@ -37,6 +37,8 @@ const statusText = document.querySelector("#status");
 
 let lobbyWaitingText = document.querySelector("#lobby-waiting-text");
 
+roomCodeInput.value = "";
+
 if (!lobbyWaitingText) {
   lobbyWaitingText = document.createElement("p");
   lobbyWaitingText.id = "lobby-waiting-text";
@@ -293,9 +295,9 @@ socket.on("role_assigned", ({ role, location }) => {
   assignedLocation = role === "spy" ? null : location;
 
   if (role === "spy") {
-    assignedRoleText = "You are the Spy.";
+    assignedRoleText = "Spy: learn the secret location!";
   } else {
-    assignedRoleText = `You are an Agent. Location: ${location}.`;
+    assignedRoleText = "Agent: find the spy!";
   }
 
   renderRole();
@@ -555,7 +557,11 @@ function renderGame(room) {
 }
 
 function renderGameState(room) {
-  gameStateCard.classList.remove("is-win", "is-loss");
+  gameStateCard.classList.remove("is-win", "is-loss", "is-your-action");
+
+  if (room.status !== "finished" && isCurrentPlayerActionRequired(room)) {
+    gameStateCard.classList.add("is-your-action");
+  }
 
   if (room.status === "finished") {
     const personalResult = getPersonalResult(room);
@@ -573,6 +579,17 @@ function renderGameState(room) {
     }
 
     gameStateText.textContent = "Game finished. Chat is open for discussion.";
+    return;
+  }
+
+  const voteState = getActiveVoteState(room);
+
+  if (voteState) {
+    const progress = getVoteProgress(room, voteState);
+    
+    gameStateText.textContent =
+      `Waiting for players to vote. ${progress.submittedCount}/${progress.totalCount} voted.`;
+
     return;
   }
 
@@ -1588,4 +1605,103 @@ function createReplayButton() {
   timerCard.appendChild(button);
 
   return button;
+}
+
+function isCurrentPlayerActionRequired(room) {
+  if (!room || room.status !== "playing") {
+    return false;
+  }
+
+  if (pendingAccusationName) {
+    return false;
+  }
+
+  const voteState = getActiveVoteState(room);
+
+  if (voteState) {
+    return currentUserNeedsAccusationVote(room);
+  }
+
+  if (!room.turn) {
+    return false;
+  }
+
+  if (room.turn.phase === "asking") {
+    return isCurrentUser(room.turn.currentQuestionerName);
+  }
+
+  if (room.turn.phase === "answering") {
+    return isCurrentUser(room.turn.currentAnswererName);
+  }
+
+  if (room.turn.phase === "belief") {
+    return currentUserNeedsBeliefUpdate(room);
+  }
+
+  if (room.turn.phase === "final_accusing") {
+    return Boolean(
+      room.finalAccusation &&
+      isCurrentUser(room.finalAccusation.currentAccuserName)
+    );
+  }
+
+  if (room.turn.phase === "final_voting") {
+    return currentUserNeedsAccusationVote(room);
+  }
+
+  return false;
+}
+
+function currentUserNeedsBeliefUpdate(room) {
+  if (!room || !room.beliefUpdate || !room.turn || room.turn.phase !== "belief") {
+    return false;
+  }
+
+  const beliefKey = buildBeliefUpdateKey(room);
+
+  if (!beliefKey) {
+    return false;
+  }
+
+  return (
+    pendingBeliefUpdateKey !== beliefKey &&
+    !submittedBeliefUpdateKeys.has(beliefKey)
+  );
+}
+
+function currentUserNeedsAccusationVote(room) {
+  const voteState = getActiveVoteState(room);
+
+  if (!voteState) {
+    return false;
+  }
+
+  if (pendingVoteKey === voteState.key || submittedVoteKeys.has(voteState.key)) {
+    return false;
+  }
+
+  return voteState.pendingVoterNames.some(name => isCurrentUser(name));
+}
+
+function getVoteProgress(room, voteState) {
+  const pendingCount = voteState.pendingVoterNames.length;
+
+  let totalCount = null;
+
+  if (Number.isInteger(voteState.totalCount)) {
+    totalCount = voteState.totalCount;
+  } else if (Number.isInteger(voteState.voterCount)) {
+    totalCount = voteState.voterCount;
+  } else if (room && Array.isArray(room.players)) {
+    totalCount = Math.max(0, room.players.length - 1);
+  }
+
+  if (!Number.isInteger(totalCount)) {
+    totalCount = pendingCount;
+  }
+
+  return {
+    submittedCount: Math.max(0, totalCount - pendingCount),
+    totalCount
+  };
 }

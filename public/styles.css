@@ -315,7 +315,6 @@ select:disabled {
 
 .game-shell {
   width: min(1640px, calc(100vw - 48px));
-  /* min-height: 960px; */
   height: auto;
   display: grid;
   grid-template-columns: 280px minmax(520px, 1fr) minmax(500px, 560px);
@@ -350,6 +349,8 @@ select:disabled {
 .chat-panel {
   display: flex;
   flex-direction: column;
+  min-height: 0;
+  overflow: hidden;
   background: var(--card-strong);
   border: 1px solid var(--border);
   border-radius: 26px;
@@ -415,6 +416,42 @@ select:disabled {
   border: 1px solid var(--state-border);
   color: var(--state-text);
   box-shadow: 0 30px 90px rgba(15, 23, 42, 0.32);
+}
+
+.game-state-card.is-your-action {
+  background:
+    linear-gradient(135deg, rgba(219, 234, 254, 0.98), rgba(239, 246, 255, 0.92));
+  border-color: rgba(37, 99, 235, 0.75);
+  color: var(--text);
+  box-shadow: 0 24px 70px rgba(37, 99, 235, 0.18);
+}
+
+.game-state-card.is-your-action::before {
+  border-color: rgba(37, 99, 235, 0.2);
+}
+
+.game-state-card.is-your-action .mini-label {
+  color: #1d4ed8;
+}
+
+.game-state-card.is-your-action .game-state-text {
+  color: #1e3a8a;
+}
+
+@keyframes action-nudge-left {
+  0%,
+  70%,
+  100% {
+    transform: translateX(0);
+  }
+
+  84% {
+    transform: translateX(-8px);
+  }
+}
+
+.game-state-card.is-your-action {
+  animation: action-nudge-left 2s ease-in-out infinite;
 }
 
 .game-state-card::before {
@@ -512,7 +549,7 @@ select:disabled {
 }
 
 .message-list {
-  flex: 1;
+  flex: 1 1 0;
   min-height: 0;
   margin: 0 0 18px;
   padding: 0;
@@ -803,6 +840,7 @@ select:disabled {
 .locations-card {
   display: flex;
   flex-direction: column;
+  align-self: start;
 }
 
 .locations-card .location-list {
