@@ -1,6 +1,9 @@
+import fs from "fs";
+import path from "path";
 import express from "express";
 import http from "http";
 import { Server } from "socket.io";
+import crypto from "crypto";
 import { createGame, LOCATIONS } from "./game.js";
 
 const app = express();
@@ -14,6 +17,8 @@ const ROUND_SECONDS = 480;
 const BELIEF_VALUES = ["-", "N", "+"];
 
 const rooms = new Map();
+
+const ROOM_SNAPSHOT_DIR = path.join(process.cwd(), "public", "rooms");
 
 app.use(express.static("public"));
 
@@ -37,9 +42,13 @@ io.on("connection", socket => {
     const player = createPlayer(socket.id, name, email);
 
     rooms.set(code, {
+      id: crypto.randomUUID(),
+      code,
       hostId: socket.id,
       status: "lobby",
+      createdAt: new Date().toISOString(),
       players: [player],
+      playedPlayers: [],
       messages: [],
       game: null,
       roundTimer: null
@@ -145,6 +154,7 @@ io.on("connection", socket => {
     }
 
     room.status = "playing";
+    room.playedPlayers = structuredClone(room.players);
     room.game = createGame(room.players);
     startRoundTimer(roomCode, room);
 
@@ -1498,7 +1508,8 @@ function createPlayer(id, name, email) {
   return {
     id,
     name: name.trim(),
-    email: email.trim().toLowerCase()
+    email: email.trim().toLowerCase(),
+    joinedAt: new Date().toISOString()
   };
 }
 
@@ -1674,15 +1685,18 @@ function leaveRoom(socket) {
     throw new Error(`Socket ${socket.id} is missing from room ${roomCode}`);
   }
 
-  room.players = room.players.filter(player => player.id !== socket.id);
+  const isLastPlayer = room.players.length === 1;
+
   socket.leave(roomCode);
   delete socket.data.roomCode;
 
-  if (room.players.length === 0) {
-    clearRoundTimer(room);
-    rooms.delete(roomCode);
+  if (isLastPlayer) {
+    room.closedByPlayerId = socket.id;
+    deleteRoom(roomCode, "last_player_left");
     return;
   }
+
+  room.players = room.players.filter(player => player.id !== socket.id);
 
   if (room.hostId === socket.id) {
     room.hostId = room.players[0].id;
@@ -1698,7 +1712,9 @@ function destroyRoom(roomCode, message) {
     throw new Error(`Tried to destroy missing room ${roomCode}`);
   }
 
-  clearRoundTimer(room);
+  room.destroyedAt = new Date().toISOString();
+  room.destroyReason = message;
+  room.status = "destroyed";
 
   io.to(roomCode).emit("room_destroyed", { message });
 
@@ -1711,7 +1727,7 @@ function destroyRoom(roomCode, message) {
     }
   }
 
-  rooms.delete(roomCode);
+  deleteRoom(roomCode, "destroyed_during_play");
 }
 
 function publicRoom(room) {
@@ -1911,6 +1927,43 @@ function publicRoom(room) {
       sentAt: message.sentAt
     }))
   };
+}
+
+function deleteRoom(roomCode, deleteReason) {
+  const room = rooms.get(roomCode);
+
+  if (!room) {
+    throw new Error(`Tried to delete missing room ${roomCode}`);
+  }
+
+  room.deletedAt = new Date().toISOString();
+  room.deleteReason = deleteReason;
+
+  clearRoundTimer(room);
+
+  saveRoom(room, deleteReason);
+
+  rooms.delete(roomCode);
+}
+
+function saveRoom(room, reason) {
+  if (!room.id) {
+    throw new Error("Cannot save room without id");
+  }
+
+  room.savedAt = new Date().toISOString();
+  room.saveReason = reason;
+
+  fs.mkdirSync(ROOM_SNAPSHOT_DIR, { recursive: true });
+
+  const filename = `${room.id}.json`;
+  const filePath = path.join(ROOM_SNAPSHOT_DIR, filename);
+
+  fs.writeFileSync(filePath, JSON.stringify(room, null, 2));
+
+  console.log(`Saved room ${room.id} to /rooms/${filename}`);
+
+  return `/rooms/${filename}`;
 }
 
 const PORT = process.env.PORT || 3000;
