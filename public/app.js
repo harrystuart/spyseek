@@ -970,7 +970,7 @@ function renderLocations(room) {
 function renderMessages(room) {
   messagesList.innerHTML = "";
 
-  for (const message of room.messages.filter(shouldShowPermanentMessage)) {
+  for (const message of room.messages) {
     const item = document.createElement("li");
 
     if (message.type === "question") {
@@ -1240,28 +1240,6 @@ function getActiveVoteState(room) {
   }
 
   return null;
-}
-
-function shouldShowPermanentMessage(message) {
-  if (message.type !== "system") {
-    return true;
-  }
-
-  const text = message.text.toLowerCase();
-
-  if (text.includes("belief update required")) {
-    return false;
-  }
-
-  if (text.includes("belief update was submitted")) {
-    return false;
-  }
-
-  if (text.includes("belief updates submitted")) {
-    return false;
-  }
-
-  return true;
 }
 
 function canAccuse(player, room) {

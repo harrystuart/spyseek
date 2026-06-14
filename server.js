@@ -13,7 +13,7 @@ const io = new Server(server);
 const MIN_PLAYERS = 3;
 const MAX_PLAYERS = 4;
 const MAX_CHAT_MESSAGE_LENGTH = 500;
-const ROUND_SECONDS = 60;
+const ROUND_SECONDS = 720;
 const BELIEF_VALUES = ["-", "N", "+"];
 
 const rooms = new Map();
@@ -279,29 +279,11 @@ io.on("connection", socket => {
       room.game.beliefUpdate = null;
       room.game.phase = "asking";
 
-      room.messages.push({
-        type: "system",
-        senderId: null,
-        senderName: "System",
-        recipientName: null,
-        text: `All belief updates submitted. ${nextQuestioner.name} asks next.`,
-        sentAt: new Date().toISOString()
-      });
-
       io.to(roomCode).emit("room_updated", publicRoom(room));
 
       console.log(rooms);
       return;
     }
-
-    room.messages.push({
-      type: "system",
-      senderId: null,
-      senderName: "System",
-      recipientName: null,
-      text: "A belief update was submitted.",
-      sentAt: new Date().toISOString()
-    });
 
     io.to(roomCode).emit("room_updated", publicRoom(room));
 
@@ -457,7 +439,7 @@ io.on("connection", socket => {
       senderId: null,
       senderName: "System",
       recipientName: null,
-      text: `${accuser.name} accused ${accused.name}. The accusation is ${accuser.name}'s yes vote. No discussion.`,
+      text: `${accuser.name} accused ${accused.name}. The accusation is ${accuser.name}'s yes vote.`,
       sentAt: new Date().toISOString()
     });
 
@@ -779,15 +761,6 @@ io.on("connection", socket => {
         updates: [],
         startedAt: new Date().toISOString()
       };
-
-      room.messages.push({
-        type: "system",
-        senderId: null,
-        senderName: "System",
-        recipientName: null,
-        text: "Belief update required before the next question.",
-        sentAt: new Date().toISOString()
-      });
 
       io.to(roomCode).emit("room_updated", publicRoom(room));
 
