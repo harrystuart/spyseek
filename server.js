@@ -13,7 +13,7 @@ const io = new Server(server);
 const MIN_PLAYERS = 3;
 const MAX_PLAYERS = 4;
 const MAX_CHAT_MESSAGE_LENGTH = 500;
-const ROUND_SECONDS = 480;
+const ROUND_SECONDS = 720;
 const BELIEF_VALUES = ["-", "N", "+"];
 
 const rooms = new Map();
