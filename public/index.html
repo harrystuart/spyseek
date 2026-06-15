@@ -165,11 +165,40 @@
 
           <p class="mini-label">Rules</p>
 
-          <h2 id="help-modal-title">How to play Spyhunt</h2>
+          <div class="help-page-shell">
+            <button id="help-previous-page" class="help-page-arrow" type="button" aria-label="Previous rules page">
+              <span class="material-symbols-rounded" aria-hidden="true">chevron_left</span>
+            </button>
 
-          <p class="modal-copy">
-            Placeholder rules text. This is where we will explain how the game works.
-          </p>
+            <div class="help-pages">
+              <article class="help-page is-active" data-help-page>
+                <h2 id="help-modal-title">Welcome to Spyhunt</h2>
+                <p class="modal-copy help-page-copy">
+                  Mock page one. One player is secretly the spy. Everyone else knows the hidden location.
+                </p>
+              </article>
+
+              <article class="help-page" data-help-page>
+                <h2>Asking questions</h2>
+                <p class="modal-copy help-page-copy">
+                  Mock page two. On your turn, choose another player and ask a question.
+                </p>
+              </article>
+
+              <article class="help-page" data-help-page>
+                <h2>Accusations and guesses</h2>
+                <p class="modal-copy help-page-copy">
+                  Mock page three. Agents can accuse suspicious players. The spy can guess the hidden location.
+                </p>
+              </article>
+            </div>
+
+            <button id="help-next-page" class="help-page-arrow" type="button" aria-label="Next rules page">
+              <span class="material-symbols-rounded" aria-hidden="true">chevron_right</span>
+            </button>
+          </div>
+
+          <div id="help-page-dots" class="help-page-dots" aria-label="Rules page indicator"></div>
         </section>
       </div>
 

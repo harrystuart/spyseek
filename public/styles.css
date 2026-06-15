@@ -1135,5 +1135,100 @@ select:disabled {
 }
 
 .help-modal-card {
-  max-width: 560px;
+  max-width: 620px;
+}
+
+.help-page-shell {
+  display: grid;
+  grid-template-columns: auto 1fr auto;
+  gap: 18px;
+  align-items: center;
+  min-height: 220px;
+}
+
+.help-pages {
+  min-width: 0;
+}
+
+.help-page {
+  text-align: center;
+}
+
+.help-page:not(.is-active) {
+  display: none;
+}
+
+.help-page h2 {
+  margin-bottom: 12px;
+  font-size: 1.7rem;
+  letter-spacing: -0.04em;
+}
+
+.help-page-copy {
+  max-width: 420px;
+  margin: 0 auto;
+}
+
+.help-page-arrow {
+  width: 42px;
+  height: 42px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0;
+  border: 1px solid var(--border);
+  border-radius: 999px;
+  background: var(--secondary);
+  color: var(--text);
+  cursor: pointer;
+  transition:
+    background 120ms ease,
+    color 120ms ease,
+    border-color 120ms ease,
+    transform 120ms ease;
+}
+
+.help-page-arrow .material-symbols-rounded {
+  font-size: 28px;
+  line-height: 1;
+}
+
+.help-page-arrow:hover {
+  background: var(--primary);
+  border-color: var(--primary);
+  color: white;
+}
+
+.help-page-arrow:active {
+  transform: translateY(1px);
+}
+
+.help-page-dots {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 7px;
+  margin-top: 18px;
+}
+
+.help-page-dot {
+  width: 8px;
+  height: 8px;
+  border: 0;
+  border-radius: 999px;
+  background: rgba(107, 114, 128, 0.35);
+  cursor: pointer;
+  transition:
+    width 120ms ease,
+    background 120ms ease,
+    transform 120ms ease;
+}
+
+.help-page-dot.is-active {
+  width: 22px;
+  background: #1d4ed8;
+}
+
+.help-page-dot:hover {
+  transform: scale(1.15);
 }

@@ -40,6 +40,12 @@ const roomIdBadge = document.querySelector("#room-id-badge");
 const helpButton = document.querySelector("#help-button");
 const helpModal = document.querySelector("#help-modal");
 const closeHelpModalButton = document.querySelector("#close-help-modal");
+const helpPreviousPageButton = document.querySelector("#help-previous-page");
+const helpNextPageButton = document.querySelector("#help-next-page");
+const helpPages = Array.from(document.querySelectorAll("[data-help-page]"));
+const helpPageDots = document.querySelector("#help-page-dots");
+
+let helpPageIndex = 0;
 
 let lobbyWaitingText = document.querySelector("#lobby-waiting-text");
 
@@ -104,6 +110,14 @@ closeHelpModalButton.addEventListener("click", () => {
 
 helpModal.querySelector(".modal-backdrop").addEventListener("click", () => {
   closeHelpModal();
+});
+
+helpPreviousPageButton.addEventListener("click", () => {
+  showPreviousHelpPage();
+});
+
+helpNextPageButton.addEventListener("click", () => {
+  showNextHelpPage();
 });
 
 createRoomButton.addEventListener("click", () => {
@@ -406,6 +420,7 @@ function sendChatMessage() {
 }
 
 function openHelpModal() {
+  renderHelpPage();
   helpModal.classList.remove("is-hidden");
   helpModal.setAttribute("aria-hidden", "false");
   closeHelpModalButton.focus();
@@ -460,6 +475,58 @@ function getActiveInterfaceElement() {
 
   return interfaces.find(element => {
     return element && !element.classList.contains("is-hidden");
+  });
+}
+
+function showPreviousHelpPage() {
+  helpPageIndex =
+    helpPageIndex === 0 ? helpPages.length - 1 : helpPageIndex - 1;
+
+  renderHelpPage();
+}
+
+function showNextHelpPage() {
+  helpPageIndex =
+    helpPageIndex === helpPages.length - 1 ? 0 : helpPageIndex + 1;
+
+  renderHelpPage();
+}
+
+function renderHelpPage() {
+  if (!helpPages.length || !helpPageDots) {
+    return;
+  }
+
+  helpPages.forEach((page, index) => {
+    const isActive = index === helpPageIndex;
+
+    page.classList.toggle("is-active", isActive);
+    page.hidden = !isActive;
+  });
+
+  renderHelpPageDots();
+}
+
+function renderHelpPageDots() {
+  helpPageDots.innerHTML = "";
+
+  helpPages.forEach((_, index) => {
+    const dot = document.createElement("button");
+    dot.type = "button";
+    dot.className = "help-page-dot";
+    dot.setAttribute("aria-label", `Go to rules page ${index + 1}`);
+
+    if (index === helpPageIndex) {
+      dot.classList.add("is-active");
+      dot.setAttribute("aria-current", "true");
+    }
+
+    dot.addEventListener("click", () => {
+      helpPageIndex = index;
+      renderHelpPage();
+    });
+
+    helpPageDots.appendChild(dot);
   });
 }
 
@@ -1818,4 +1885,5 @@ function renderRoomIdBadge() {
   roomIdBadge.textContent = `Room ${latestRoom.id}`;
 }
 
-showEntry()
+showEntry();
+renderHelpPage();
