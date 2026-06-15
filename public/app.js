@@ -11,6 +11,7 @@ const nameInput = document.querySelector("#name");
 const emailInput = document.querySelector("#email");
 const roomCodeInput = document.querySelector("#room-code");
 const createRoomButton = document.querySelector("#create-room");
+const joinRandomRoomButton = document.querySelector("#join-random-room");
 const joinRoomButton = document.querySelector("#join-room");
 
 const lobbyRoomCode = document.querySelector("#lobby-room-code");
@@ -91,6 +92,16 @@ createRoomButton.addEventListener("click", () => {
   setEntryBusy(true);
 
   socket.emit("create_room", {
+    name: nameInput.value,
+    email: emailInput.value
+  });
+});
+
+joinRandomRoomButton.addEventListener("click", () => {
+  clearStatus();
+  setEntryBusy(true);
+
+  socket.emit("join_random_room", {
     name: nameInput.value,
     email: emailInput.value
   });
@@ -1566,6 +1577,7 @@ function clearStatus() {
 function setEntryBusy(isBusy) {
   createRoomButton.disabled = isBusy;
   joinRoomButton.disabled = isBusy;
+  joinRandomRoomButton.disabled = isBusy;
 }
 
 function setLobbyBusy(isBusy) {
@@ -1697,6 +1709,12 @@ function getVoteProgress(room, voteState) {
 
 function renderRoomIdBadge() {
   if (!roomIdBadge) {
+    return;
+  }
+
+  if (!latestRoom) {
+    roomIdBadge.hidden = true;
+    roomIdBadge.textContent = "";
     return;
   }
 

@@ -17,9 +17,12 @@ const ROUND_SECONDS = 720;
 const BELIEF_VALUES = ["-", "N", "+"];
 const SPY_BELIEF_LOCATION_OPTION_COUNT = 6;
 
-const rooms = new Map();
+const ROOM_KIND_PRIVATE = "private";
+const ROOM_KIND_RANDOM = "random";
 
 const ROOM_SNAPSHOT_DIR = path.join(process.cwd(), "public", "rooms");
+
+const rooms = new Map();
 
 app.use(express.static("public"));
 
@@ -39,12 +42,13 @@ io.on("connection", socket => {
       return;
     }
 
-    const code = Math.random().toString(36).slice(2, 6).toUpperCase();
+    const code = createUniqueRoomCode();
     const player = createPlayer(socket.id, name, email);
 
     rooms.set(code, {
       id: crypto.randomUUID(),
       code,
+      kind: ROOM_KIND_PRIVATE,
       hostId: socket.id,
       status: "lobby",
       createdAt: new Date().toISOString(),
@@ -117,6 +121,63 @@ io.on("connection", socket => {
 
     socket.emit("room_joined", { code: roomCode });
     io.to(roomCode).emit("room_updated", publicRoom(room));
+
+    console.log(rooms);
+  });
+
+  socket.on("join_random_room", ({ name, email }) => {
+    if (socket.data.roomCode) {
+      socket.emit("app_error", "You are already in a room");
+      return;
+    }
+
+    const playerError = validatePlayerInput(name, email);
+
+    if (playerError) {
+      socket.emit("app_error", playerError);
+      return;
+    }
+
+    const existingRoom = findAvailableRandomRoom(name, email);
+
+    if (existingRoom) {
+      const player = createPlayer(socket.id, name, email);
+
+      existingRoom.players.push(player);
+      socket.data.roomCode = existingRoom.code;
+      socket.join(existingRoom.code);
+
+      socket.emit("room_joined", { code: existingRoom.code });
+      io.to(existingRoom.code).emit("room_updated", publicRoom(existingRoom));
+
+      console.log(rooms);
+      return;
+    }
+
+    const code = createUniqueRoomCode();
+    const player = createPlayer(socket.id, name, email);
+
+    const room = {
+      id: crypto.randomUUID(),
+      code,
+      kind: ROOM_KIND_RANDOM,
+      hostId: socket.id,
+      status: "lobby",
+      createdAt: new Date().toISOString(),
+      players: [player],
+      playedPlayers: [],
+      messages: [],
+      game: null,
+      roundTimer: null
+    };
+
+    rooms.set(code, room);
+
+    socket.data.roomCode = code;
+    socket.join(code);
+
+    socket.emit("room_joined", { code });
+    io.to(code).emit("room_updated", publicRoom(room));
 
     console.log(rooms);
   });
@@ -1951,9 +2012,57 @@ function saveRoom(room, reason) {
 }
 
 function chooseSpyBeliefLocationOptions() {
-  return [...LOCATIONS]
-    .sort(() => Math.random() - 0.5)
-    .slice(0, SPY_BELIEF_LOCATION_OPTION_COUNT);
+  const locations = [...LOCATIONS];
+
+  for (let index = locations.length - 1; index > 0; index -= 1) {
+    const randomIndex = crypto.randomInt(0, index + 1);
+
+    [locations[index], locations[randomIndex]] = [locations[randomIndex], locations[index]];
+  }
+
+  return locations.slice(0, SPY_BELIEF_LOCATION_OPTION_COUNT);
+}
+
+function createUniqueRoomCode() {
+  const maxAttempts = 100;
+
+  for (let attempt = 0; attempt < maxAttempts; attempt += 1) {
+    const code = crypto.randomBytes(3)
+      .toString("base64url")
+      .replace(/[^A-Z0-9]/gi, "")
+      .slice(0, 4)
+      .toUpperCase();
+
+    if (code.length === 4 && !rooms.has(code)) {
+      return code;
+    }
+  }
+
+  throw new Error("Could not create a unique room code");
+}
+
+function findAvailableRandomRoom(name, email) {
+  for (const room of rooms.values()) {
+    if (room.kind !== ROOM_KIND_RANDOM) {
+      continue;
+    }
+
+    if (room.status !== "lobby") {
+      continue;
+    }
+
+    if (room.players.length >= MAX_PLAYERS) {
+      continue;
+    }
+
+    if (validateUniquePlayerInRoom(room, name, email)) {
+      continue;
+    }
+
+    return room;
+  }
+
+  return null;
 }
 
 const PORT = process.env.PORT || 3000;
