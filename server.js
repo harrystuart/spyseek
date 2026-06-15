@@ -13,7 +13,7 @@ const io = new Server(server);
 const MIN_PLAYERS = 3;
 const MAX_PLAYERS = 8;
 const MAX_CHAT_MESSAGE_LENGTH = 500;
-const ROUND_SECONDS = 720;
+const ROUND_SECONDS = 900;
 const BELIEF_VALUES = ["-", "N", "+"];
 const SPY_BELIEF_LOCATION_OPTION_COUNT = 6;
 
