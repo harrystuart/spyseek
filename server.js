@@ -1221,12 +1221,7 @@ function validatePlayerInput(name, email) {
     return "Username is required";
   }
 
-  if (typeof email !== "string") {
-    return "Email is required";
-  }
-
   const cleanName = name.trim();
-  const cleanEmail = email.trim().toLowerCase();
 
   if (!cleanName) {
     return "Username is required";
@@ -1236,11 +1231,13 @@ function validatePlayerInput(name, email) {
     return "Username must be 32 characters or fewer";
   }
 
-  if (!cleanEmail) {
-    return "Email is required";
+  if (email !== undefined && email !== null && typeof email !== "string") {
+    return "Email is invalid";
   }
 
-  if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(cleanEmail)) {
+  const cleanEmail = typeof email === "string" ? email.trim().toLowerCase() : "";
+
+  if (cleanEmail && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(cleanEmail)) {
     return "Email is invalid";
   }
 }
@@ -1466,7 +1463,7 @@ function validateLocationGuessInput(location) {
 
 function validateUniquePlayerInRoom(room, name, email) {
   const cleanName = name.trim().toLowerCase();
-  const cleanEmail = email.trim().toLowerCase();
+  const cleanEmail = typeof email === "string" ? email.trim().toLowerCase() : "";
 
   const duplicateName = room.players.find(player => {
     return player.name.toLowerCase() === cleanName;
@@ -1476,20 +1473,24 @@ function validateUniquePlayerInRoom(room, name, email) {
     return "Username is already taken in this room";
   }
 
-  const duplicateEmail = room.players.find(player => {
-    return player.email === cleanEmail;
-  });
+  if (cleanEmail) {
+    const duplicateEmail = room.players.find(player => {
+      return player.email === cleanEmail;
+    });
 
-  if (duplicateEmail) {
-    return "Email is already in this room";
+    if (duplicateEmail) {
+      return "Email is already in this room";
+    }
   }
 }
 
 function createPlayer(id, name, email) {
+  const cleanEmail = typeof email === "string" ? email.trim().toLowerCase() : "";
+
   return {
     id,
     name: name.trim(),
-    email: email.trim().toLowerCase(),
+    email: cleanEmail || null,
     joinedAt: new Date().toISOString()
   };
 }

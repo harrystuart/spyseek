@@ -136,6 +136,12 @@ h2 {
   gap: 18px;
 }
 
+.optional-label {
+  float: right;
+  color: var(--muted);
+  font-weight: 500;
+}
+
 .field {
   display: grid;
   gap: 8px;
