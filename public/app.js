@@ -3,8 +3,8 @@ const socket = io();
 const PLAYER_SIGNATURE_STORAGE_KEY = "spyhunt.playerSignature";
 const playerSignature = getOrCreatePlayerSignature();
 
-const MIN_PLAYERS = 3;
-const MAX_PLAYERS = 8;
+const MIN_PLAYERS = 4;
+const MAX_PLAYERS = 6;
 
 const EMOTES = [
   { id: "smile", codepoint: "1f604", label: "Smile" },
