@@ -3,7 +3,7 @@
 }
 
 :root {
-  --ui-scale: clamp(0.82, calc(100vh / 1352px), 1);
+  --ui-scale: 1;
   --background: #f6f4ef;
   --card: rgba(255, 255, 255, 0.92);
   --card-strong: rgba(255, 255, 255, 0.97);

@@ -2102,3 +2102,14 @@ function playEmote(option) {
 showEntry();
 renderHelpPage();
 updateEntryButtons();
+
+// UI scale
+
+function updateUiScale() {
+  const scale = Math.min(1, Math.max(0.82, window.innerHeight / 1352));
+  document.documentElement.style.setProperty("--ui-scale", String(scale));
+}
+
+window.addEventListener("resize", updateUiScale);
+window.addEventListener("load", updateUiScale);
+updateUiScale();
