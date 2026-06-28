@@ -409,7 +409,7 @@ socket.on("room_destroyed", ({ message }) => {
 
   setEntryBusy(false);
   setLobbyBusy(false);
-  clearResearchConsent();
+  //clearResearchConsent();
   showEntry();
   showError(message || "Room destroyed.");
 });
@@ -423,7 +423,7 @@ socket.on("room_left", () => {
   clearStatus();
   setEntryBusy(false);
   setLobbyBusy(false);
-  clearResearchConsent();
+  //clearResearchConsent();
   showEntry();
 });
 
@@ -1984,11 +1984,11 @@ function createReplayButton() {
   button.id = "replay-game";
   button.type = "button";
   button.className = "button button-primary replay-button";
-  button.textContent = "Replay";
+  button.textContent = "New Game";
   button.hidden = true;
 
   button.addEventListener("click", () => {
-    window.location.reload();
+    socket.emit("leave_room");
   });
 
   timerCard.appendChild(button);

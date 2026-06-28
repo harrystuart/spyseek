@@ -403,8 +403,21 @@ select:disabled {
   display: none;
 }
 
-.replay-button {
+.button.replay-button {
   width: 100%;
+  background: linear-gradient(135deg, rgba(219, 234, 254, 0.98), rgba(239, 246, 255, 0.92));
+  border-color: rgba(37, 99, 235, 0.75);
+  color: #1d4ed8;
+  animation: help-button-pulse 1.8s ease-in-out infinite;
+}
+
+.button.replay-button:hover {
+  background: var(--primary);
+  border-color: var(--primary);
+  color: white;
+  transform: translateY(-1px);
+  box-shadow: 0 calc(18px * var(--ui-scale)) calc(44px * var(--ui-scale)) rgba(15, 23, 42, 0.22);
+  animation: none;
 }
 
 .role-card {
