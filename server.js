@@ -36,7 +36,7 @@ function validateResearchConsent(researchDataConsent, noPiiConsent) {
 }
 
 io.on("connection", socket => {
-  console.log("connected", socket.id);
+  console.log(`[socket connected] id=${socket.id}`);
 
   socket.on("create_room", ({ name, playerId, playerSignature, researchDataConsent, noPiiConsent }) => {
     if (socket.data.roomCode) {
@@ -66,10 +66,11 @@ io.on("connection", socket => {
     }
 
     const code = createUniqueRoomCode();
+    const id = crypto.randomUUID();
     const player = createPlayer(socket.id, name, playerId, playerSignature);
 
     rooms.set(code, {
-      id: crypto.randomUUID(),
+      id,
       code,
       kind: ROOM_KIND_PRIVATE,
       hostId: socket.id,
@@ -89,7 +90,7 @@ io.on("connection", socket => {
     socket.emit("room_created", { code });
     io.to(code).emit("room_updated", publicRoom(rooms.get(code)));
 
-    console.log(rooms);
+    console.log(`[socket room_created] id=${socket.id} roomCode=${code} roomId=${id}`);
   });
 
   socket.on("join_room", ({ code, name, playerId, playerSignature, researchDataConsent, noPiiConsent }) => {
@@ -160,7 +161,7 @@ io.on("connection", socket => {
     socket.emit("room_joined", { code: roomCode });
     io.to(roomCode).emit("room_updated", publicRoom(room));
 
-    console.log(rooms);
+    console.log(`[socket room_joined] id=${socket.id} roomCode=${roomCode}`);
   });
 
   socket.on("join_random_room", ({ name, playerId, playerSignature, researchDataConsent, noPiiConsent }) => {
@@ -202,7 +203,7 @@ io.on("connection", socket => {
       socket.emit("room_joined", { code: existingRoom.code });
       io.to(existingRoom.code).emit("room_updated", publicRoom(existingRoom));
 
-      console.log(rooms);
+      console.log(`[socket room_joined_existing_random] id=${socket.id} roomCode=${existingRoom.code}`);
       return;
     }
 
@@ -232,7 +233,7 @@ io.on("connection", socket => {
     socket.emit("room_joined", { code });
     io.to(code).emit("room_updated", publicRoom(room));
 
-    console.log(rooms);
+    console.log(`[socket room_joined_new_random] id=${socket.id} roomCode=${code}`);
   });
 
   socket.on("start_game", () => {
@@ -285,7 +286,7 @@ io.on("connection", socket => {
     io.to(roomCode).emit("room_updated", publicRoom(room));
     sendPlayerRoles(room);
 
-    console.log(rooms);
+    console.log(`[socket game_started] id=${socket.id} roomCode=${roomCode}`);
   });
 
   socket.on("submit_belief_update", ({ questionerBelief, answererBelief, suspectedLocations }) => {
@@ -395,14 +396,10 @@ io.on("connection", socket => {
       room.game.phase = "asking";
 
       io.to(roomCode).emit("room_updated", publicRoom(room));
-
-      console.log(rooms);
       return;
     }
 
     io.to(roomCode).emit("room_updated", publicRoom(room));
-
-    console.log(rooms);
   });
 
   socket.on("spy_guess_location", ({ location }) => {
@@ -452,8 +449,6 @@ io.on("connection", socket => {
     resolveSpyGuess(room, location.trim());
 
     io.to(roomCode).emit("room_updated", publicRoom(room));
-
-    console.log(rooms);
   });
 
   socket.on("start_accusation", ({ accusedName }) => {
@@ -561,16 +556,12 @@ io.on("connection", socket => {
     if (votingPlayerIds.length === 0) {
       resolveConviction(room, accusation);
       io.to(roomCode).emit("room_updated", publicRoom(room));
-
-      console.log(rooms);
       return;
     }
 
     room.game.accusation = accusation;
 
     io.to(roomCode).emit("room_updated", publicRoom(room));
-
-    console.log(rooms);
   });
 
   socket.on("vote_accusation", ({ vote }) => {
@@ -679,8 +670,6 @@ io.on("connection", socket => {
       room.game.accusation = null;
 
       io.to(roomCode).emit("room_updated", publicRoom(room));
-
-      console.log(rooms);
       return;
     }
 
@@ -701,8 +690,6 @@ io.on("connection", socket => {
       resolveConviction(room, room.game.accusation);
 
       io.to(roomCode).emit("room_updated", publicRoom(room));
-
-      console.log(rooms);
       return;
     }
 
@@ -716,8 +703,6 @@ io.on("connection", socket => {
     });
 
     io.to(roomCode).emit("room_updated", publicRoom(room));
-
-    console.log(rooms);
   });
 
   socket.on("send_chat_message", ({ text, answererName }) => {
@@ -757,8 +742,6 @@ io.on("connection", socket => {
       });
 
       io.to(roomCode).emit("room_updated", publicRoom(room));
-
-      console.log(rooms);
       return;
     }
 
@@ -781,8 +764,6 @@ io.on("connection", socket => {
       });
 
       io.to(roomCode).emit("room_updated", publicRoom(room));
-
-      console.log(rooms);
       return;
     }
 
@@ -841,8 +822,6 @@ io.on("connection", socket => {
       room.game.currentAnswererId = answerer.id;
 
       io.to(roomCode).emit("room_updated", publicRoom(room));
-
-      console.log(rooms);
       return;
     }
 
@@ -879,8 +858,6 @@ io.on("connection", socket => {
       };
 
       io.to(roomCode).emit("room_updated", publicRoom(room));
-
-      console.log(rooms);
       return;
     }
 
@@ -936,17 +913,22 @@ io.on("connection", socket => {
 
     if (room.status === "playing") {
       destroyRoom(roomCode, "A player left during the game. The room was destroyed.");
-      console.log(rooms);
       return;
     }
 
     leaveRoom(socket);
     socket.emit("room_left");
 
-    console.log(rooms);
+    console.log(`[socket room_left] id=${socket.id} roomCode=${roomCode}`);
   });
 
-  socket.on("disconnect", () => {
+  socket.on("disconnecting", reason => {
+    console.log(`[socket disconnecting] id=${socket.id} reason=${reason}`);
+  });
+
+  socket.on("disconnect", reason => {
+    console.log(`[socket disconnected] id=${socket.id} reason=${reason}`);
+
     if (!socket.data.roomCode) {
       return;
     }
@@ -960,13 +942,10 @@ io.on("connection", socket => {
 
     if (room.status === "playing") {
       destroyRoom(roomCode, "A player disconnected during the game. The room was destroyed.");
-      console.log(rooms);
       return;
     }
 
     leaveRoom(socket);
-
-    console.log(rooms);
   });
 });
 
@@ -1019,8 +998,6 @@ function expireRoundTimer(roomCode) {
   startFinalAccusationPhase(room);
 
   io.to(roomCode).emit("room_updated", publicRoom(room));
-
-  console.log(rooms);
 }
 
 function startFinalAccusationPhase(room) {
@@ -1166,8 +1143,6 @@ function startFinalAccusation(roomCode, room, socket, accusedName) {
   }
 
   io.to(roomCode).emit("room_updated", publicRoom(room));
-
-  console.log(rooms);
 }
 
 function voteFinalAccusation(roomCode, room, socket, vote) {
@@ -1255,8 +1230,6 @@ function voteFinalAccusation(roomCode, room, socket, vote) {
     advanceFinalAccuser(room);
 
     io.to(roomCode).emit("room_updated", publicRoom(room));
-
-    console.log(rooms);
     return;
   }
 
@@ -1278,8 +1251,6 @@ function voteFinalAccusation(roomCode, room, socket, vote) {
   }
 
   io.to(roomCode).emit("room_updated", publicRoom(room));
-
-  console.log(rooms);
 }
 
 function advanceFinalAccuser(room) {
